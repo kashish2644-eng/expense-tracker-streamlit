@@ -2,4 +2,4 @@
  pandas 
  os
  datetime
- plotly.express 
+ plotly
