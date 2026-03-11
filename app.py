@@ -32,23 +32,27 @@ html, body, [class*="css"] {{
     background-size: cover;
     background-position: center;
     position: relative;
+    overflow: hidden;
 }}
 
 [data-testid="stAppViewContainer"]::before {{
     content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    inset: 0;
 
-    /* Subtle gradient overlay */
+    /* Subtle gradient overlay placed above the background image */
     background: linear-gradient(
         rgba(255,255,255,0.65),
         rgba(255,255,255,0.75)
     );
 
-    z-index: -1;
+    z-index: 0;
+    pointer-events: none;
+}}
+
+[data-testid="stAppViewContainer"] > * {{
+    position: relative;
+    z-index: 1;
 }}
 
 .card {{
@@ -62,6 +66,43 @@ html, body, [class*="css"] {{
 .big-title {{
     font-size:38px;
     font-weight:600;
+}}
+
+/* Hide Streamlit's built-in header, menu and footer to remove the top bar */
+#MainMenu {{
+    visibility: hidden;
+}}
+header {{
+    visibility: hidden;
+}}
+footer {{
+    visibility: hidden;
+}}
+[data-testid="stToolbar"] {{
+    display: none;
+}}
+
+/* Centered login card styles */
+.login-card {{
+    max-width:520px;
+    margin:40px auto;
+    padding:28px;
+    border-radius:16px;
+    background: rgba(255,255,255,0.92);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}}
+
+.login-title {{
+    font-size:34px;
+    font-weight:700;
+    text-align:center;
+    margin-bottom:10px;
+}}
+
+.login-sub {{
+    text-align:center;
+    color:#6b7280;
+    margin-bottom:18px;
 }}
 
 </style>
@@ -146,28 +187,33 @@ if "page" not in st.session_state:
 # ---------------------------------------------------------
 if not st.session_state.username and not st.session_state.signup:
 
-    st.markdown("<h1 class='big-title'>Welcome 🌈</h1>",unsafe_allow_html=True)
+    # Center the login card using columns
+    left, center, right = st.columns([1, 2, 1])
 
-    st.markdown("<div class='card'>",unsafe_allow_html=True)
+    with center:
+      
+        st.markdown("<div class='login-card'>", unsafe_allow_html=True)
+        st.markdown("<div class='login-title'>Welcome 🌈</div>", unsafe_allow_html=True)
+        st.markdown("<div class='login-sub'>Sign in to continue to your expense dashboard</div>", unsafe_allow_html=True)
 
-    username=st.text_input("Enter Username")
+        username = st.text_input("Enter Username")
 
-    if st.button("Login"):
+        if st.button("Login", use_container_width=True):
 
-        if os.path.exists(get_user_file(username)):
+            if os.path.exists(get_user_file(username)):
 
-            st.session_state.username=username
+                st.session_state.username = username
+                st.rerun()
+
+            else:
+                st.error("User does not exist")
+
+        if st.button("Create Account", use_container_width=True):
+
+            st.session_state.signup = True
             st.rerun()
 
-        else:
-            st.error("User does not exist")
-
-    if st.button("Create Account"):
-
-        st.session_state.signup=True
-        st.rerun()
-
-    st.markdown("</div>",unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     st.stop()
 
