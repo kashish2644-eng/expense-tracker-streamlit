@@ -16,7 +16,7 @@ st.set_page_config(
 # ---------------------------------------------------------
 # 🎨 BACKGROUND + FONT
 # ---------------------------------------------------------
-background_url = "https://www.boardandlife.com/wp-content/uploads/2019/09/monthly-expense-tracker-desk-space.jpg"
+background_url = "https://img.freepik.com/free-photo/top-view-desk-concept-with-notepad_23-2148604955.jpg?semt=ais_hybrid&w=740&q=80"
 
 st.markdown(f"""
 <style>
@@ -407,3 +407,4 @@ st.dataframe(df,use_container_width=True)
 # ---------------------------------------------------------
 
 st.download_button("📥 Download CSV",df.to_csv(index=False),"expenses.csv")
+
