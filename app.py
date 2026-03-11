@@ -31,14 +31,32 @@ html, body, [class*="css"] {{
     background-image: url('{background_url}');
     background-size: cover;
     background-position: center;
+    position: relative;
+}}
+
+[data-testid="stAppViewContainer"]::before {{
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    /* Subtle gradient overlay */
+    background: linear-gradient(
+        rgba(255,255,255,0.65),
+        rgba(255,255,255,0.75)
+    );
+
+    z-index: -1;
 }}
 
 .card {{
     padding:20px;
     border-radius:15px;
-    background:rgba(255,255,255,0.7);
-    backdrop-filter:blur(7px);
-    box-shadow:0px 4px 12px rgba(0,0,0,0.18);
+    background:rgba(255,255,255,0.85);
+    backdrop-filter:blur(10px);
+    box-shadow:0px 6px 18px rgba(0,0,0,0.15);
 }}
 
 .big-title {{
@@ -407,6 +425,7 @@ st.dataframe(df,use_container_width=True)
 # ---------------------------------------------------------
 
 st.download_button("📥 Download CSV",df.to_csv(index=False),"expenses.csv")
+
 
 
 
