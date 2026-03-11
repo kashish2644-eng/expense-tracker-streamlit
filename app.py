@@ -16,7 +16,7 @@ st.set_page_config(
 # ---------------------------------------------------------
 # 🎨 BACKGROUND + FONT
 # ---------------------------------------------------------
-background_url = "https://img.freepik.com/free-photo/top-view-desk-concept-with-notepad_23-2148604955.jpg?semt=ais_hybrid&w=740&q=80"
+background_url = "https://img.freepik.com/free-photo/close-up-education-economy-objects_23-2149113581.jpg?semt=ais_rp_50_assets&w=740&q=80"
 
 st.markdown(f"""
 <style>
@@ -407,4 +407,5 @@ st.dataframe(df,use_container_width=True)
 # ---------------------------------------------------------
 
 st.download_button("📥 Download CSV",df.to_csv(index=False),"expenses.csv")
+
 
