@@ -16,7 +16,7 @@ st.set_page_config(
 # ---------------------------------------------------------
 # 🎨 BACKGROUND + FONT
 # ---------------------------------------------------------
-background_url = "https://www.bankmainstreet.com/wp-content/uploads/2025/09/income-and-expenses-spot.jpg"
+background_url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSvdAnbg1m-lirY9mnUlQrMPR-nbgjFuYBDA&s"
 
 st.markdown(f"""
 <style>
@@ -407,6 +407,7 @@ st.dataframe(df,use_container_width=True)
 # ---------------------------------------------------------
 
 st.download_button("📥 Download CSV",df.to_csv(index=False),"expenses.csv")
+
 
 
 
