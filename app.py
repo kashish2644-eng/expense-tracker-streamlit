@@ -16,7 +16,7 @@ st.set_page_config(
 # ---------------------------------------------------------
 # 🎨 BACKGROUND + FONT
 # ---------------------------------------------------------
-background_url = "https://img.freepik.com/free-photo/close-up-education-economy-objects_23-2149113581.jpg?semt=ais_rp_50_assets&w=740&q=80"
+background_url = "https://www.bankmainstreet.com/wp-content/uploads/2025/09/income-and-expenses-spot.jpg"
 
 st.markdown(f"""
 <style>
@@ -407,5 +407,6 @@ st.dataframe(df,use_container_width=True)
 # ---------------------------------------------------------
 
 st.download_button("📥 Download CSV",df.to_csv(index=False),"expenses.csv")
+
 
 
