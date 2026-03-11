@@ -16,7 +16,7 @@ st.set_page_config(
 # ---------------------------------------------------------
 # 🎨 BACKGROUND + FONT
 # ---------------------------------------------------------
-background_url = "https://static.vecteezy.com/system/resources/previews/068/754/747/non_2x/simple-background-with-aesthetic-wavy-lines-in-pastel-blue-white-and-peach-free-vector.jpg"
+background_url = "https://www.boardandlife.com/wp-content/uploads/2019/09/monthly-expense-tracker-desk-space.jpg"
 
 st.markdown(f"""
 <style>
@@ -405,4 +405,5 @@ st.dataframe(df,use_container_width=True)
 # ---------------------------------------------------------
 # DOWNLOAD
 # ---------------------------------------------------------
+
 st.download_button("📥 Download CSV",df.to_csv(index=False),"expenses.csv")
