@@ -16,7 +16,7 @@ st.set_page_config(
 # ---------------------------------------------------------
 # 🎨 BACKGROUND + FONT
 # ---------------------------------------------------------
-background_url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSvdAnbg1m-lirY9mnUlQrMPR-nbgjFuYBDA&s"
+background_url = "https://images.pexels.com/photos/5466785/pexels-photo-5466785.jpeg"
 
 st.markdown(f"""
 <style>
@@ -407,6 +407,7 @@ st.dataframe(df,use_container_width=True)
 # ---------------------------------------------------------
 
 st.download_button("📥 Download CSV",df.to_csv(index=False),"expenses.csv")
+
 
 
 
