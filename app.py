@@ -21,16 +21,27 @@ background_url = "https://images.pexels.com/photos/5466785/pexels-photo-5466785.
 st.markdown(f"""
 <style>
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {{
+    --primary-color: #6366f1;
+    --primary-hover: #4f46e5;
+    --bg-card: rgba(255, 255, 255, 0.85);
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}}
 
 html, body, [class*="css"] {{
-    font-family: 'Poppins', sans-serif !important;
+    font-family: 'Inter', sans-serif !important;
+    color: var(--text-main);
 }}
 
 [data-testid="stAppViewContainer"] {{
     background-image: url('{background_url}');
     background-size: cover;
     background-position: center;
+    background-attachment: fixed;
     position: relative;
     overflow: hidden;
 }}
@@ -39,13 +50,11 @@ html, body, [class*="css"] {{
     content: "";
     position: absolute;
     inset: 0;
-
-    /* Subtle gradient overlay placed above the background image */
     background: linear-gradient(
-        rgba(255,255,255,0.65),
-        rgba(255,255,255,0.75)
+        135deg,
+        rgba(255, 255, 255, 0.7),
+        rgba(255, 255, 255, 0.4)
     );
-
     z-index: 0;
     pointer-events: none;
 }}
@@ -55,54 +64,111 @@ html, body, [class*="css"] {{
     z-index: 1;
 }}
 
+/* Glassmorphism Card */
 .card {{
-    padding:20px;
-    border-radius:15px;
-    background:rgba(255,255,255,0.85);
-    backdrop-filter:blur(10px);
-    box-shadow:0px 6px 18px rgba(0,0,0,0.15);
+    padding: 24px;
+    border-radius: 20px;
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: var(--glass-shadow);
+    margin-bottom: 24px;
+    transition: transform 0.2s ease;
 }}
 
 .big-title {{
-    font-size:38px;
-    font-weight:600;
+    font-size: 42px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #4f46e5, #9333ea);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 20px;
 }}
 
-/* Hide Streamlit's built-in header, menu and footer to remove the top bar */
-#MainMenu {{
-    visibility: hidden;
-}}
-header {{
-    visibility: hidden;
-}}
-footer {{
-    visibility: hidden;
-}}
-[data-testid="stToolbar"] {{
-    display: none;
+/* Modern Header Bar */
+.header-container {{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
 }}
 
-/* Centered login card styles */
+.avatar {{
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 18px;
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+}}
+
+/* Login/Signup Cards */
 .login-card {{
-    max-width:520px;
-    margin:40px auto;
-    padding:28px;
-    border-radius:16px;
-    background: rgba(255,255,255,0.92);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    max-width: 480px;
+    margin: 60px auto;
+    padding: 40px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255,255,255,0.5);
 }}
 
 .login-title {{
-    font-size:34px;
-    font-weight:700;
-    text-align:center;
-    margin-bottom:10px;
+    font-size: 38px;
+    font-weight: 800;
+    text-align: center;
+    color: #111827;
+    margin-bottom: 12px;
 }}
 
 .login-sub {{
-    text-align:center;
-    color:#6b7280;
-    margin-bottom:18px;
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 30px;
+    font-size: 16px;
+}}
+
+/* Metric styling */
+.metric-card {{
+    text-align: center;
+}}
+.metric-label {{
+    font-size: 14px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}}
+.metric-value {{
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-main);
+}}
+
+/* Hide Streamlit components */
+#MainMenu {{ display: none !important; }}
+header {{ display: none !important; }}
+footer {{ display: none !important; }}
+[data-testid="stToolbar"] {{ display: none !important; }}
+[data-testid="stHeader"] {{ display: none !important; }}
+
+/* Remove top padding */
+[data-testid="stAppViewContainer"] {{
+    padding-top: 0 !important;
+}}
+.main .block-container {{
+    padding-top: 1rem !important;
 }}
 
 </style>
@@ -193,23 +259,22 @@ if not st.session_state.username and not st.session_state.signup:
     with center:
       
         st.markdown("<div class='login-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='login-title'>Welcome 🌈</div>", unsafe_allow_html=True)
-        st.markdown("<div class='login-sub'>Sign in to continue to your expense dashboard</div>", unsafe_allow_html=True)
+        st.markdown("<div class='login-title'>Welcome Back 💎</div>", unsafe_allow_html=True)
+        st.markdown("<div class='login-sub'>Sign in to manage your finances with ease</div>", unsafe_allow_html=True)
 
-        username = st.text_input("Enter Username")
+        username = st.text_input("Username", placeholder="e.g. kashish_26")
 
-        if st.button("Login", use_container_width=True):
-
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Sign In", use_container_width=True, type="primary"):
             if os.path.exists(get_user_file(username)):
-
                 st.session_state.username = username
                 st.rerun()
-
             else:
                 st.error("User does not exist")
 
-        if st.button("Create Account", use_container_width=True):
-
+        st.markdown("<div style='text-align:center; margin: 15px 0; color: #9ca3af;'>OR</div>", unsafe_allow_html=True)
+        
+        if st.button("Create New Account", use_container_width=True):
             st.session_state.signup = True
             st.rerun()
 
@@ -262,218 +327,220 @@ if st.session_state.signup and not st.session_state.username:
     st.stop()
 
 # ---------------------------------------------------------
-# DASHBOARD HEADER (Avatar + Logout)
+# DASHBOARD HEADER (Modern Header Bar)
 # ---------------------------------------------------------
-colA,colB,colC=st.columns([8,1,1])
-
-with colA:
-    st.markdown(f"<h1 class='big-title'>Hello, {st.session_state.username} 👋</h1>",unsafe_allow_html=True)
-
-with colB:
+if st.session_state.username:
     st.markdown(f"""
-        <div style="
-        background:white;
-        padding:8px 16px;
-        border-radius:50px;
-        font-size:22px;
-        font-weight:600;
-        color:#7b2cbf;
-        text-align:center;">
-        {st.session_state.username[0].upper()}
+        <div class="header-container">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="avatar">{st.session_state.username[0].upper()}</div>
+                <div style="font-size: 24px; font-weight: 700;">Hello, {st.session_state.username} 👋</div>
+            </div>
         </div>
-    """,unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-with colC:
-    if st.button("Logout"):
-        st.session_state.username=None
-        st.session_state.page="dashboard"
+    # Logout button and data loading
+    col_logout, _ = st.columns([1, 5])
+    with col_logout:
+        if st.button("Logout", use_container_width=True):
+            st.session_state.username = None
+            st.session_state.page = "dashboard"
+            st.rerun()
+
+    df = load_data(st.session_state.username)
+    profile = load_profile(st.session_state.username)
+
+    # ---------------------------------------------------------
+    # AGE BASED BUDGET
+    # ---------------------------------------------------------
+    if profile is not None:
+        dob = profile["dob"][0]
+        age = calculate_age(dob)
+        budget = recommended_budget(age)
+        spent = df["amount"].sum()
+        remaining = budget - spent
+
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-top:0;'>🎯 Monthly Budget Strategy</h3>", unsafe_allow_html=True)
+        
+        b_col1, b_col2 = st.columns(2)
+        with b_col1:
+            st.write(f"Age: **{age} years**")
+            st.write(f"Recommended Budget: **₹{budget}**")
+        with b_col2:
+            st.write(f"Total Spent: **₹{spent}**")
+            st.write(f"Remaining: **₹{remaining}**")
+
+        if spent >= 0.85 * budget and spent < budget:
+            st.warning("⚠️ **Warning:** You've used 85% of your monthly budget.")
+
+        if remaining > 0:
+            st.success("🎉 **Great job!** You're within your budget.")
+        elif remaining == 0:
+            st.warning("ℹ️ **Limit Reached:** You've reached your budget limit.")
+        else:
+            st.error("🚨 **Budget Exceeded:** You've spent more than your recommended budget.")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # ---------------------------------------------------------
+    # ADD EXPENSE BUTTON
+    # ---------------------------------------------------------
+    if st.button("➕ Add Expense", use_container_width=True):
+        st.session_state.page = "add_expense"
         st.rerun()
 
-df=load_data(st.session_state.username)
-profile=load_profile(st.session_state.username)
+    # ---------------------------------------------------------
+    # ADD EXPENSE PAGE
+    # ---------------------------------------------------------
+    if st.session_state.page == "add_expense":
+        st.markdown("<div class='header-container'><div style='font-size: 24px; font-weight: 700;'>➕ Add New Expense</div></div>", unsafe_allow_html=True)
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        
+        col_date, col_cat = st.columns(2)
+        with col_date:
+            date = st.date_input("Transaction Date")
+        with col_cat:
+            categories = sorted(set(df["category"].unique()).union(DEFAULT_CATEGORIES))
+            category = st.selectbox("Category", categories + ["Add New..."])
+            if category == "Add New...":
+                category = st.text_input("Custom Category Name")
 
-# ---------------------------------------------------------
-# AGE BASED BUDGET
-# ---------------------------------------------------------
-if profile is not None:
+        col_amt, col_pay = st.columns(2)
+        with col_amt:
+            amount = st.number_input("Amount (₹)", min_value=1, step=10)
+        with col_pay:
+            payment = st.selectbox("Payment Mode", PAYMENT_MODES)
 
-    dob=profile["dob"][0]
-    age=calculate_age(dob)
-    budget=recommended_budget(age)
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        b1, b2 = st.columns(2)
+        with b1:
+            if st.button("Save Transaction", use_container_width=True, type="primary"):
+                new_row = pd.DataFrame({
+                    "date": [date.strftime("%d-%m-%Y")],
+                    "category": [category],
+                    "amount": [amount],
+                    "payment_mode": [payment],
+                    "month": [date.strftime("%B")]
+                })
+                df = pd.concat([df, new_row], ignore_index=True)
+                save_data(st.session_state.username, df)
+                st.success("Success! Expense recorded.")
+        
+        with b2:
+            if st.button("Cancel & Return", use_container_width=True):
+                st.session_state.page = "dashboard"
+                st.rerun()
 
-    spent=df["amount"].sum()
-    remaining=budget-spent
+        st.markdown("</div>", unsafe_allow_html=True)
+        st.stop()
 
-    st.markdown("<div class='card'>",unsafe_allow_html=True)
+    # ---------------------------------------------------------
+    # SUMMARY CARDS
+    # ---------------------------------------------------------
+    col1, col2, col3 = st.columns(3)
 
-    st.subheader("🎯 Recommended Monthly Budget")
+    with col1:
+        st.markdown(f"""
+            <div class="card metric-card">
+                <div class="metric-label">💰 Total Expense</div>
+                <div class="metric-value">₹ {df['amount'].sum():,.0f}</div>
+            </div>
+        """, unsafe_allow_html=True)
 
-    st.write(f"Age : **{age} years**")
-    st.write(f"Recommended Budget : **₹{budget}**")
-    st.write(f"Total Spent : **₹{spent}**")
-    st.write(f"Remaining : **₹{remaining}**")
+    with col2:
+        month_total = df[df["month"] == datetime.date.today().strftime("%B")]["amount"].sum()
+        st.markdown(f"""
+            <div class="card metric-card">
+                <div class="metric-label">📅 This Month</div>
+                <div class="metric-value">₹ {month_total:,.0f}</div>
+            </div>
+        """, unsafe_allow_html=True)
 
-    if spent >= 0.85 * budget and spent < budget:
-        st.warning("⚠ Warning: You already used 85% of your monthly budget.")
+    with col3:
+        if not df.empty:
+            top = df.groupby("category")["amount"].sum().idxmax()
+            st.markdown(f"""
+                <div class="card metric-card">
+                    <div class="metric-label">🔥 Top Category</div>
+                    <div class="metric-value">{top}</div>
+                </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+                <div class="card metric-card">
+                    <div class="metric-label">🔥 Top Category</div>
+                    <div class="metric-value">N/A</div>
+                </div>
+            """, unsafe_allow_html=True)
 
-    if remaining > 0:
-        st.success("You are saving money 🎉")
+    # ---------------------------------------------------------
+    # CHARTS
+    # ---------------------------------------------------------
+    st.markdown("<br><h3 style='text-align: center;'>📊 Visual Analytics</h3>", unsafe_allow_html=True)
 
-    elif remaining == 0:
-        st.warning("You reached your budget limit")
-
-    else:
-        st.error("You exceeded your budget")
-
-    st.markdown("</div>",unsafe_allow_html=True)
-
-# ---------------------------------------------------------
-# ADD EXPENSE BUTTON
-# ---------------------------------------------------------
-if st.button("➕ Add Expense",use_container_width=True):
-
-    st.session_state.page="add_expense"
-    st.rerun()
-
-# ---------------------------------------------------------
-# ADD EXPENSE PAGE
-# ---------------------------------------------------------
-if st.session_state.page=="add_expense":
-
-    st.markdown("<h2 class='big-title'>➕ Add Expense</h2>",unsafe_allow_html=True)
-
-    st.markdown("<div class='card'>",unsafe_allow_html=True)
-
-    date=st.date_input("Select Date")
-
-    categories=sorted(set(df["category"].unique()).union(DEFAULT_CATEGORIES))
-
-    category=st.selectbox("Category",categories+["Add New..."])
-
-    if category=="Add New...":
-        category=st.text_input("Enter New Category")
-
-    amount=st.number_input("Amount",min_value=1)
-
-    payment=st.selectbox("Payment Mode",PAYMENT_MODES)
-
-    if st.button("Save Expense"):
-
-        new_row=pd.DataFrame({
-
-            "date":[date.strftime("%d-%m-%Y")],
-            "category":[category],
-            "amount":[amount],
-            "payment_mode":[payment],
-            "month":[date.strftime("%B")]
-
-        })
-
-        df=pd.concat([df,new_row],ignore_index=True)
-
-        save_data(st.session_state.username,df)
-
-        st.success("Expense Added!")
-
-    if st.button("⬅ Back to Dashboard"):
-
-        st.session_state.page="dashboard"
-        st.rerun()
-
-    st.markdown("</div>",unsafe_allow_html=True)
-
-    st.stop()
-
-# ---------------------------------------------------------
-# SUMMARY CARDS
-# ---------------------------------------------------------
-col1,col2,col3=st.columns(3)
-
-with col1:
-    st.markdown("<div class='card'>",unsafe_allow_html=True)
-    st.subheader("💰 Total Expense")
-    st.write(f"₹ {df['amount'].sum():,.0f}")
-    st.markdown("</div>",unsafe_allow_html=True)
-
-with col2:
-    st.markdown("<div class='card'>",unsafe_allow_html=True)
-    st.subheader("📅 This Month")
-    month_total=df[df["month"]==datetime.date.today().strftime("%B")]["amount"].sum()
-    st.write(f"₹ {month_total:,.0f}")
-    st.markdown("</div>",unsafe_allow_html=True)
-
-with col3:
-    st.markdown("<div class='card'>",unsafe_allow_html=True)
-    st.subheader("🔥 Top Category")
     if not df.empty:
-        top=df.groupby("category")["amount"].sum().idxmax()
-        st.write(top)
-    st.markdown("</div>",unsafe_allow_html=True)
+        c1, c2 = st.columns(2)
+        color_scale = ["#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899"]
 
-# ---------------------------------------------------------
-# CHARTS
-# ---------------------------------------------------------
-st.subheader("📊 Visual Analytics")
+        with c1:
+            fig_pie = px.pie(df, names="category", values="amount", hole=0.4, color_discrete_sequence=color_scale)
+            fig_pie.update_layout(margin=dict(t=0, b=0, l=0, r=0), showlegend=True)
+            st.plotly_chart(fig_pie, use_container_width=True)
 
-if not df.empty:
+        with c2:
+            fig_bar = px.bar(df, x="month", y="amount", color_discrete_sequence=["#6366f1"])
+            fig_bar.update_layout(margin=dict(t=20, b=0, l=0, r=0), plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+            st.plotly_chart(fig_bar, use_container_width=True)
 
-    c1,c2=st.columns(2)
+    # ---------------------------------------------------------
+    # PAYMENT MODE ANALYTICS
+    # ---------------------------------------------------------
+    st.markdown("<h3 style='text-align: center;'>💳 Payment Mode Analysis</h3>", unsafe_allow_html=True)
 
-    with c1:
-        st.plotly_chart(px.pie(df,names="category",values="amount"),use_container_width=True)
+    if not df.empty:
+        payment_chart = px.pie(df, names="payment_mode", values="amount", hole=0.4, color_discrete_sequence=["#4f46e5", "#7c3aed", "#9333ea", "#c026d3"])
+        payment_chart.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+        st.plotly_chart(payment_chart, use_container_width=True)
 
-    with c2:
-        st.plotly_chart(px.bar(df,x="month",y="amount"),use_container_width=True)
+    # ---------------------------------------------------------
+    # EXPENSE PREDICTION
+    # ---------------------------------------------------------
+    st.subheader("📈 Next Month Expense Prediction")
+    if not df.empty:
+        monthly = df.groupby("month")["amount"].sum()
+        if len(monthly) > 1:
+            predicted = monthly.mean()
+            st.info(f"Estimated Expense for Next Month : ₹ {predicted:,.0f}")
+        else:
+            st.write("Add more data to predict future expenses.")
 
-# ---------------------------------------------------------
-# PAYMENT MODE ANALYTICS
-# ---------------------------------------------------------
-st.subheader("💳 Payment Mode Analytics")
+    # ---------------------------------------------------------
+    # TABLE
+    # ---------------------------------------------------------
+    st.subheader("📋 Expense Records")
+    st.dataframe(df, use_container_width=True)
 
-if not df.empty:
+    if not df.empty:
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.markdown("<h4 style='margin-top:0;'>🗑️ Delete an Expense</h4>", unsafe_allow_html=True)
+        del_col1, del_col2 = st.columns([3, 1])
+        with del_col1:
+            delete_index = st.selectbox(
+                "Select Record to Delete", 
+                options=df.index, 
+                format_func=lambda x: f"[{df.loc[x, 'date']}] {df.loc[x, 'category']} - ₹{df.loc[x, 'amount']} ({df.loc[x, 'payment_mode']})",
+                label_visibility="collapsed"
+            )
+        with del_col2:
+            if st.button("Delete Record", type="primary", use_container_width=True):
+                df = df.drop(delete_index).reset_index(drop=True)
+                save_data(st.session_state.username, df)
+                st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    payment_chart=px.pie(
-        df,
-        names="payment_mode",
-        values="amount"
-    )
-
-    st.plotly_chart(payment_chart,use_container_width=True)
-
-# ---------------------------------------------------------
-# EXPENSE PREDICTION
-# ---------------------------------------------------------
-st.subheader("📈 Next Month Expense Prediction")
-
-if not df.empty:
-
-    monthly=df.groupby("month")["amount"].sum()
-
-    if len(monthly)>1:
-
-        predicted=monthly.mean()
-
-        st.info(f"Estimated Expense for Next Month : ₹ {predicted:,.0f}")
-
-    else:
-
-        st.write("Add more data to predict future expenses.")
-
-# ---------------------------------------------------------
-# TABLE
-# ---------------------------------------------------------
-st.subheader("📋 Expense Records")
-
-st.dataframe(df,use_container_width=True)
-
-# ---------------------------------------------------------
-# DOWNLOAD
-# ---------------------------------------------------------
-
-st.download_button("📥 Download CSV",df.to_csv(index=False),"expenses.csv")
-
-
-
-
-
-
+    # ---------------------------------------------------------
+    # DOWNLOAD
+    # ---------------------------------------------------------
+    st.download_button("📥 Download CSV", df.to_csv(index=False), "expenses.csv")
