@@ -259,7 +259,7 @@ if not st.session_state.username and not st.session_state.signup:
     with center:
       
         st.markdown("<div class='login-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='login-title'>Welcome To Your Hisab Kitab 📓</div>", unsafe_allow_html=True)
+        st.markdown("<div class='login-title'>Welcome To Your Hisab-Kitab 📓</div>", unsafe_allow_html=True)
         st.markdown("<div class='login-sub'>Sign in to manage your finances with ease</div>", unsafe_allow_html=True)
 
         username = st.text_input("Username", placeholder="e.g. kashish_26")
