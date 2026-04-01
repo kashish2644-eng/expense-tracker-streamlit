@@ -3,7 +3,48 @@ import pandas as pd
 import os
 import datetime
 import plotly.express as px
+from supabase import create_client
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
 
+from supabase import create_client
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+import io
+
+def generate_pdf(df, username):
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+
+    styles = getSampleStyleSheet()
+    elements = []
+
+    title = Paragraph(f"{username}'s Expense Report", styles["Title"])
+    elements.append(title)
+
+    if not df.empty:
+        data = [df.columns.tolist()] + df.values.tolist()
+
+        table = Table(data)
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0,0), (-1,0), colors.grey),
+            ("TEXTCOLOR",(0,0),(-1,0),colors.white),
+            ("GRID",(0,0),(-1,-1),1,colors.black),
+        ]))
+
+        elements.append(table)
+
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+url = st.secrets["SUPABASE_URL"]
+key = st.secrets["SUPABASE_KEY"]
+supabase = create_client(url, key)
 # ---------------------------------------------------------
 # 🌈 PAGE CONFIG
 # ---------------------------------------------------------
@@ -174,35 +215,32 @@ footer {{ display: none !important; }}
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------------------------------------------------
-# 📁 FILE HANDLING
-# ---------------------------------------------------------
-def get_user_file(username):
-    return f"data_{username}.csv"
 
-def get_profile_file(username):
-    return f"profile_{username}.csv"
-
+# ---------------------------------------------------------
+# ☁️ SUPABASE HANDLING (REPLACED CSV)
+# ---------------------------------------------------------
 def load_data(username):
-    file = get_user_file(username)
-    if os.path.exists(file):
-        return pd.read_csv(file)
-    return pd.DataFrame(columns=["date","category","amount","payment_mode","month"])
+    res = supabase.table("expenses").select("*").eq("username", username).execute()
+    df = pd.DataFrame(res.data)
+    if df.empty:
+        return pd.DataFrame(columns=["date","category","amount","payment_mode","month","username"])
+    return df
 
-def save_data(username,df):
-    df.to_csv(get_user_file(username),index=False)
+def save_data(username, df):
+    supabase.table("expenses").delete().eq("username", username).execute()
+    if not df.empty:
+        supabase.table("expenses").insert(df.to_dict(orient="records")).execute()
 
-# ---------------------------------------------------------
-# 👤 USER PROFILE
-# ---------------------------------------------------------
-def save_profile(username,dob):
-    df=pd.DataFrame({"username":[username],"dob":[dob]})
-    df.to_csv(get_profile_file(username),index=False)
+def save_profile(username, dob):
+    supabase.table("users").upsert({
+        "username": username,
+        "dob": dob
+    }).execute()
 
 def load_profile(username):
-    file=get_profile_file(username)
-    if os.path.exists(file):
-        return pd.read_csv(file)
+    res = supabase.table("users").select("*").eq("username", username).execute()
+    if res.data:
+        return pd.DataFrame(res.data)
     return None
 
 # ---------------------------------------------------------
@@ -253,20 +291,23 @@ if "page" not in st.session_state:
 # ---------------------------------------------------------
 if not st.session_state.username and not st.session_state.signup:
 
-    # Center the login card using columns
     left, center, right = st.columns([1, 2, 1])
 
     with center:
       
         st.markdown("<div class='login-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='login-title'>Welcome To Your Hisab-Kitab 📓</div>", unsafe_allow_html=True)
+        st.markdown("<div class='login-title'>Welcome Back 💎</div>", unsafe_allow_html=True)
         st.markdown("<div class='login-sub'>Sign in to manage your finances with ease</div>", unsafe_allow_html=True)
 
         username = st.text_input("Username", placeholder="e.g. kashish_26")
 
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("Sign In", use_container_width=True, type="primary"):
-            if os.path.exists(get_user_file(username)):
+
+            # 🔥 SUPABASE CHECK
+            res = supabase.table("users").select("*").eq("username", username).execute()
+
+            if res.data:
                 st.session_state.username = username
                 st.rerun()
             else:
@@ -296,22 +337,20 @@ if st.session_state.signup and not st.session_state.username:
 
     if st.button("Sign Up"):
 
-        if os.path.exists(get_user_file(new_user)):
+        # 🔥 SUPABASE CHECK
+        res = supabase.table("users").select("*").eq("username", new_user).execute()
+
+        if res.data:
             st.error("Username already exists!")
 
         else:
             try:
-
                 datetime.datetime.strptime(dob,"%d-%m-%Y")
 
-                df=load_data(new_user)
-
-                save_data(new_user,df)
-
-                save_profile(new_user,dob)
+                # 🔥 SAVE USER
+                save_profile(new_user, dob)
 
                 st.success("Account created! Please login")
-
                 st.session_state.signup=False
 
             except:
@@ -326,7 +365,7 @@ if st.session_state.signup and not st.session_state.username:
 
     st.stop()
 
-# ---------------------------------------------------------
+## ---------------------------------------------------------
 # DASHBOARD HEADER (Modern Header Bar)
 # ---------------------------------------------------------
 if st.session_state.username:
@@ -347,8 +386,20 @@ if st.session_state.username:
             st.session_state.page = "dashboard"
             st.rerun()
 
-    df = load_data(st.session_state.username)
-    profile = load_profile(st.session_state.username)
+    # 🔥 FETCH EXPENSE DATA FROM SUPABASE
+    res_exp = supabase.table("expenses").select("*").eq("username", st.session_state.username).execute()
+    df = pd.DataFrame(res_exp.data)
+
+    if df.empty:
+        df = pd.DataFrame(columns=["date","category","amount","payment_mode","month"])
+
+    # 🔥 FETCH USER PROFILE FROM SUPABASE
+    res_user = supabase.table("users").select("*").eq("username", st.session_state.username).execute()
+
+    if res_user.data:
+        profile = pd.DataFrame(res_user.data)
+    else:
+        profile = None
 
     # ---------------------------------------------------------
     # AGE BASED BUDGET
@@ -382,165 +433,214 @@ if st.session_state.username:
             st.error("🚨 **Budget Exceeded:** You've spent more than your recommended budget.")
 
         st.markdown("</div>", unsafe_allow_html=True)
-
     # ---------------------------------------------------------
-    # ADD EXPENSE BUTTON
+# ADD EXPENSE BUTTON
+# ---------------------------------------------------------
+if st.button("➕ Add Expense", use_container_width=True):
+    st.session_state.page = "add_expense"
+    st.rerun()
+
+# ---------------------------------------------------------
+# ADD EXPENSE PAGE
+# ---------------------------------------------------------
+if st.session_state.page == "add_expense":
+    st.markdown("<div class='header-container'><div style='font-size: 24px; font-weight: 700;'>➕ Add New Expense</div></div>", unsafe_allow_html=True)
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    
+    col_date, col_cat = st.columns(2)
+    with col_date:
+        date = st.date_input("Transaction Date")
+    with col_cat:
+        categories = sorted(set(df["category"].unique()).union(DEFAULT_CATEGORIES))
+        category = st.selectbox("Category", categories + ["Add New..."])
+        if category == "Add New...":
+            category = st.text_input("Custom Category Name")
+
+    col_amt, col_pay = st.columns(2)
+    with col_amt:
+        amount = st.number_input("Amount (₹)", min_value=1, step=10)
+    with col_pay:
+        payment = st.selectbox("Payment Mode", PAYMENT_MODES)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    b1, b2 = st.columns(2)
+    with b1:
+        if st.button("Save Transaction", use_container_width=True, type="primary"):
+
+            # 🔥 SAVE TO SUPABASE
+            supabase.table("expenses").insert({
+                "username": st.session_state.username,
+                "date": date.strftime("%d-%m-%Y"),
+                "category": category,
+                "amount": amount,
+                "payment_mode": payment,
+                "month": date.strftime("%B")
+            }).execute()
+
+            st.success("Success! Expense recorded.")
+
+            # 🔥 REFRESH PAGE
+            st.rerun()
+    
+    with b2:
+        if st.button("Cancel & Return", use_container_width=True):
+            st.session_state.page = "dashboard"
+            st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.stop()
+
+ # ---------------------------------------------------------
+# SUMMARY CARDS
+# ---------------------------------------------------------
+
+# 🔥 SAFETY: ensure numeric
+if not df.empty:
+    df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    total_expense = df["amount"].sum() if not df.empty else 0
+    st.markdown(f"""
+        <div class="card metric-card">
+            <div class="metric-label">💰 Total Expense</div>
+            <div class="metric-value">₹ {total_expense:,.0f}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    current_month = datetime.date.today().strftime("%B")
+    month_total = df[df["month"] == current_month]["amount"].sum() if not df.empty else 0
+
+    st.markdown(f"""
+        <div class="card metric-card">
+            <div class="metric-label">📅 This Month</div>
+            <div class="metric-value">₹ {month_total:,.0f}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    if not df.empty and "category" in df.columns:
+        top = df.groupby("category")["amount"].sum().idxmax()
+    else:
+        top = "N/A"
+
+    st.markdown(f"""
+        <div class="card metric-card">
+            <div class="metric-label">🔥 Top Category</div>
+            <div class="metric-value">{top}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+# ---------------------------------------------------------
+# CHARTS
+# ---------------------------------------------------------
+st.markdown("<br><h3 style='text-align: center;'>📊 Visual Analytics</h3>", unsafe_allow_html=True)
+
+if not df.empty:
+
+    # 🔥 FIX MONTH ORDER
+    month_order = ["January","February","March","April","May","June",
+                   "July","August","September","October","November","December"]
+    df["month"] = pd.Categorical(df["month"], categories=month_order, ordered=True)
+
+    c1, c2 = st.columns(2)
+    color_scale = ["#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899"]
+
+    with c1:
+        fig_pie = px.pie(df, names="category", values="amount", hole=0.4, color_discrete_sequence=color_scale)
+        fig_pie.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+        st.plotly_chart(fig_pie, use_container_width=True)
+
+    with c2:
+        fig_bar = px.bar(df, x="month", y="amount", color_discrete_sequence=["#6366f1"])
+        fig_bar.update_layout(margin=dict(t=20, b=0, l=0, r=0),
+                              plot_bgcolor='rgba(0,0,0,0)',
+                              paper_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig_bar, use_container_width=True)
+
+
+# ---------------------------------------------------------
+# PAYMENT MODE ANALYTICS
+# ---------------------------------------------------------
+st.markdown("<h3 style='text-align: center;'>💳 Payment Mode Analysis</h3>", unsafe_allow_html=True)
+
+if not df.empty:
+    payment_chart = px.pie(df, names="payment_mode", values="amount", hole=0.4)
+    payment_chart.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+    st.plotly_chart(payment_chart, use_container_width=True)
+
+
+# ---------------------------------------------------------
+# EXPENSE PREDICTION
+# ---------------------------------------------------------
+st.subheader("📈 Next Month Expense Prediction")
+
+if not df.empty:
+    monthly = df.groupby("month")["amount"].sum()
+
+    if len(monthly) > 1:
+        predicted = monthly.mean()
+        st.info(f"Estimated Expense for Next Month : ₹ {predicted:,.0f}")
+    else:
+        st.write("Add more data to predict future expenses.")
+
+
+# ---------------------------------------------------------
+# TABLE
+# ---------------------------------------------------------
+st.subheader("📋 Expense Records")
+st.dataframe(df, use_container_width=True)
+
+
+# ---------------------------------------------------------
+# DELETE (🔥 FIXED FOR SUPABASE)
+# ---------------------------------------------------------
+if not df.empty:
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<h4 style='margin-top:0;'>🗑️ Delete an Expense</h4>", unsafe_allow_html=True)
+
+    del_col1, del_col2 = st.columns([3, 1])
+
+    with del_col1:
+        delete_index = st.selectbox(
+            "Select Record to Delete",
+            options=df.index,
+            format_func=lambda x: f"[{df.loc[x, 'date']}] {df.loc[x, 'category']} - ₹{df.loc[x, 'amount']} ({df.loc[x, 'payment_mode']})",
+            label_visibility="collapsed"
+        )
+
+    with del_col2:
+        if st.button("Delete Record", type="primary", use_container_width=True):
+
+            row = df.loc[delete_index]
+
+            # 🔥 DELETE FROM SUPABASE
+            supabase.table("expenses") \
+                .delete() \
+                .eq("username", st.session_state.username) \
+                .eq("date", row["date"]) \
+                .eq("amount", row["amount"]) \
+                .execute()
+
+            st.success("Deleted successfully")
+            st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
     # ---------------------------------------------------------
-    if st.button("➕ Add Expense", use_container_width=True):
-        st.session_state.page = "add_expense"
-        st.rerun()
+# DOWNLOAD
+# ---------------------------------------------------------
+#st.download_button("📥 Download CSV", df.to_csv(index=False), "expenses.csv")
 
-    # ---------------------------------------------------------
-    # ADD EXPENSE PAGE
-    # ---------------------------------------------------------
-    if st.session_state.page == "add_expense":
-        st.markdown("<div class='header-container'><div style='font-size: 24px; font-weight: 700;'>➕ Add New Expense</div></div>", unsafe_allow_html=True)
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        
-        col_date, col_cat = st.columns(2)
-        with col_date:
-            date = st.date_input("Transaction Date")
-        with col_cat:
-            categories = sorted(set(df["category"].unique()).union(DEFAULT_CATEGORIES))
-            category = st.selectbox("Category", categories + ["Add New..."])
-            if category == "Add New...":
-                category = st.text_input("Custom Category Name")
+# 🔥 PDF DOWNLOAD
+pdf_file = generate_pdf(df, st.session_state.username)
 
-        col_amt, col_pay = st.columns(2)
-        with col_amt:
-            amount = st.number_input("Amount (₹)", min_value=1, step=10)
-        with col_pay:
-            payment = st.selectbox("Payment Mode", PAYMENT_MODES)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        b1, b2 = st.columns(2)
-        with b1:
-            if st.button("Save Transaction", use_container_width=True, type="primary"):
-                new_row = pd.DataFrame({
-                    "date": [date.strftime("%d-%m-%Y")],
-                    "category": [category],
-                    "amount": [amount],
-                    "payment_mode": [payment],
-                    "month": [date.strftime("%B")]
-                })
-                df = pd.concat([df, new_row], ignore_index=True)
-                save_data(st.session_state.username, df)
-                st.success("Success! Expense recorded.")
-        
-        with b2:
-            if st.button("Cancel & Return", use_container_width=True):
-                st.session_state.page = "dashboard"
-                st.rerun()
-
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.stop()
-
-    # ---------------------------------------------------------
-    # SUMMARY CARDS
-    # ---------------------------------------------------------
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.markdown(f"""
-            <div class="card metric-card">
-                <div class="metric-label">💰 Total Expense</div>
-                <div class="metric-value">₹ {df['amount'].sum():,.0f}</div>
-            </div>
-        """, unsafe_allow_html=True)
-
-    with col2:
-        month_total = df[df["month"] == datetime.date.today().strftime("%B")]["amount"].sum()
-        st.markdown(f"""
-            <div class="card metric-card">
-                <div class="metric-label">📅 This Month</div>
-                <div class="metric-value">₹ {month_total:,.0f}</div>
-            </div>
-        """, unsafe_allow_html=True)
-
-    with col3:
-        if not df.empty:
-            top = df.groupby("category")["amount"].sum().idxmax()
-            st.markdown(f"""
-                <div class="card metric-card">
-                    <div class="metric-label">🔥 Top Category</div>
-                    <div class="metric-value">{top}</div>
-                </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown(f"""
-                <div class="card metric-card">
-                    <div class="metric-label">🔥 Top Category</div>
-                    <div class="metric-value">N/A</div>
-                </div>
-            """, unsafe_allow_html=True)
-
-    # ---------------------------------------------------------
-    # CHARTS
-    # ---------------------------------------------------------
-    st.markdown("<br><h3 style='text-align: center;'>📊 Visual Analytics</h3>", unsafe_allow_html=True)
-
-    if not df.empty:
-        c1, c2 = st.columns(2)
-        color_scale = ["#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899"]
-
-        with c1:
-            fig_pie = px.pie(df, names="category", values="amount", hole=0.4, color_discrete_sequence=color_scale)
-            fig_pie.update_layout(margin=dict(t=0, b=0, l=0, r=0), showlegend=True)
-            st.plotly_chart(fig_pie, use_container_width=True)
-
-        with c2:
-            fig_bar = px.bar(df, x="month", y="amount", color_discrete_sequence=["#6366f1"])
-            fig_bar.update_layout(margin=dict(t=20, b=0, l=0, r=0), plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
-            st.plotly_chart(fig_bar, use_container_width=True)
-
-    # ---------------------------------------------------------
-    # PAYMENT MODE ANALYTICS
-    # ---------------------------------------------------------
-    st.markdown("<h3 style='text-align: center;'>💳 Payment Mode Analysis</h3>", unsafe_allow_html=True)
-
-    if not df.empty:
-        payment_chart = px.pie(df, names="payment_mode", values="amount", hole=0.4, color_discrete_sequence=["#4f46e5", "#7c3aed", "#9333ea", "#c026d3"])
-        payment_chart.update_layout(margin=dict(t=0, b=0, l=0, r=0))
-        st.plotly_chart(payment_chart, use_container_width=True)
-
-    # ---------------------------------------------------------
-    # EXPENSE PREDICTION
-    # ---------------------------------------------------------
-    st.subheader("📈 Next Month Expense Prediction")
-    if not df.empty:
-        monthly = df.groupby("month")["amount"].sum()
-        if len(monthly) > 1:
-            predicted = monthly.mean()
-            st.info(f"Estimated Expense for Next Month : ₹ {predicted:,.0f}")
-        else:
-            st.write("Add more data to predict future expenses.")
-
-    # ---------------------------------------------------------
-    # TABLE
-    # ---------------------------------------------------------
-    st.subheader("📋 Expense Records")
-    st.dataframe(df, use_container_width=True)
-
-    if not df.empty:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.markdown("<h4 style='margin-top:0;'>🗑️ Delete an Expense</h4>", unsafe_allow_html=True)
-        del_col1, del_col2 = st.columns([3, 1])
-        with del_col1:
-            delete_index = st.selectbox(
-                "Select Record to Delete", 
-                options=df.index, 
-                format_func=lambda x: f"[{df.loc[x, 'date']}] {df.loc[x, 'category']} - ₹{df.loc[x, 'amount']} ({df.loc[x, 'payment_mode']})",
-                label_visibility="collapsed"
-            )
-        with del_col2:
-            if st.button("Delete Record", type="primary", use_container_width=True):
-                df = df.drop(delete_index).reset_index(drop=True)
-                save_data(st.session_state.username, df)
-                st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # ---------------------------------------------------------
-    # DOWNLOAD
-    # ---------------------------------------------------------
-    st.download_button("📥 Download CSV", df.to_csv(index=False), "expenses.csv")
+st.download_button(
+    "📄 Download PDF",
+    data=pdf_file,
+    file_name="expense_report.pdf",
+    mime="application/pdf"
+)
