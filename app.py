@@ -466,32 +466,34 @@ if st.session_state.page == "add_expense":
     
     b1, b2 = st.columns(2)
     with b1:
-        if st.button("Save Transaction", use_container_width=True, type="primary"):
+if st.button("Save Transaction", use_container_width=True, type="primary"):
 
-           # 🔥 SAVE TO SUPABASE
-try:
-    # ✅ Validate inputs
-    if not st.session_state.get("username"):
-        st.error("User not logged in")
-    elif not amount:
-        st.error("Please enter amount")
-    else:
-        response = supabase.table("expenses").insert({
-            "username": str(st.session_state.username),
-            "date": date.strftime("%Y-%m-%d"),   # ✅ FIXED FORMAT
-            "category": str(category),
-            "amount": float(amount),             # ✅ ensure numeric
-            "payment_mode": str(payment),
-            "month": date.strftime("%B")
-        }).execute()
+    # 🔥 SAVE TO SUPABASE
+    try:
+        # ✅ Validate inputs
+        if not st.session_state.get("username"):
+            st.error("User not logged in")
 
-        st.success("✅ Success! Expense recorded.")
-        print(response)
+        elif not amount:
+            st.error("Please enter amount")
 
-except Exception as e:
-    import traceback
-    st.error(f"❌ Error: {e}")
-    st.text(traceback.format_exc())
+        else:
+            response = supabase.table("expenses").insert({
+                "username": str(st.session_state.username),
+                "date": date.strftime("%Y-%m-%d"),   # ✅ FIXED FORMAT
+                "category": str(category),
+                "amount": float(amount),             # ✅ ensure numeric
+                "payment_mode": str(payment),
+                "month": date.strftime("%B")
+            }).execute()
+
+            st.success("✅ Success! Expense recorded.")
+            print(response)
+
+    except Exception as e:
+        import traceback
+        st.error(f"❌ Error: {e}")
+        st.text(traceback.format_exc())
 
             # 🔥 REFRESH PAGE
             st.rerun()
